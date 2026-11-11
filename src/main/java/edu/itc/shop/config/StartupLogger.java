@@ -12,6 +12,7 @@ public class StartupLogger {
         System.out.println("\n========================================================");
         System.out.println("Server is running! Click below to open in browser:");
         System.out.println("http://localhost:8080");
+        System.out.println("http://localhost:8080/products");
         System.out.println("Products API: http://localhost:8080/api/products");
         System.out.println("========================================================\n");
     }
