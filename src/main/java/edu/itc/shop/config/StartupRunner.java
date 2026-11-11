@@ -1,7 +1,7 @@
 package edu.itc.shop.config;
 
-import edu.itc.shop.service.ReportBuilder;
-import edu.itc.shop.service.WelcomeService;
+import edu.itc.shop.product.ReportBuilder;
+import edu.itc.shop.notification.WelcomeService;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

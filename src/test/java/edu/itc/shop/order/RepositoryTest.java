@@ -2,7 +2,7 @@ package edu.itc.shop.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import edu.itc.shop.repository.ProductRepository;
+import edu.itc.shop.product.ProductRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;

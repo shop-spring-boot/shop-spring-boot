@@ -13,9 +13,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import edu.itc.shop.config.ShopProperties;
-import edu.itc.shop.domain.Product;
-import edu.itc.shop.repository.ProductRepository;
-import edu.itc.shop.service.Notifier;
+import edu.itc.shop.product.Product;
+import edu.itc.shop.product.ProductRepository;
+import edu.itc.shop.notification.Notifier;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
