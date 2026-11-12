@@ -46,3 +46,57 @@ shop-spring-boot
 6.
 
 ---
+## Task 2
+
+### Persist cascade
+
+Only `em.persist(order)` was called. The lines were saved by the cascade:
+
+```
+insert into orders (customer_id,placed_at,status,version,id) values (?,?,?,?,?)
+insert into order_line (order_id,product_id,quantity,amount,currency,id) values (?,?,?,?,?,?)
+insert into order_line (order_id,product_id,quantity,amount,currency,id) values (?,?,?,?,?,?)
+```
+
+1 insert for the order + 2 for its lines, and no `update` statements.
+
+### Orphan removal
+
+`order.removeLine(...)` + `flush()` produced one delete:
+
+```
+delete from order_line where id=?
+```
+
+### Cascade REMOVE
+
+`em.remove(order)` + `flush()` deleted the remaining line first, then the order:
+
+```
+delete from order_line where id=?
+delete from orders where id=? and version=?
+```
+
+### toString pitfall
+
+I temporarily put `lines` in `Order.toString()` and `order` in `OrderLine.toString()`. Printing an order then failed in two ways:
+
+```
+java.lang.StackOverflowError
+org.hibernate.LazyInitializationException: Cannot lazily initialize collection of role 'edu.itc.shop.domain.Order.lines' with key '2' (no session)
+```
+
+`StackOverflowError`: the order prints its lines and each line prints its order, forever.
+`LazyInitializationException`: the order was detached, so `lines` could not be loaded without a session.
+
+Fix: `toString()` prints scalar fields only (never `lines`, `order`, `tags`, `products`). I reverted the change.
+
+### Result
+
+```
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+![Tests passed](screenshots/task2-tests-passed.png)
+![toString pitfall](screenshots/task2-tostring-pitfall.png)
