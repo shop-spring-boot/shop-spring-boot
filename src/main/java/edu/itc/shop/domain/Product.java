@@ -78,4 +78,20 @@ public class Product {
     }
 
     public Set<Tag> getTags() { return Collections.unmodifiableSet(tags); }
+
+    // NEW (Task 2, step 3)
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof Product other && id != null && id.equals(other.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return Product.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Product[id=%d, sku=%s, name=%s]".formatted(id, sku, name);
+    }
 }

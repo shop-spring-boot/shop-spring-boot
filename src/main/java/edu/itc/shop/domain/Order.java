@@ -82,4 +82,20 @@ public class Order {
     public List<OrderLine> getLines() { return Collections.unmodifiableList(lines); }
 
     public void setStatus(OrderStatus status) { this.status = status; }
+
+    // NEW (Task 2, step 3)
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof Order other && id != null && id.equals(other.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return Order.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Order[id=%d, status=%s]".formatted(id, status);
+    }
 }

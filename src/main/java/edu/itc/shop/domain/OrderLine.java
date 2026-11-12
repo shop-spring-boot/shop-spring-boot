@@ -50,4 +50,20 @@ public class OrderLine {
     public Money getUnitPrice() { return unitPrice; }
 
     void setOrder(Order order) { this.order = order; }
+
+    // NEW (Task 2, step 3)
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof OrderLine other && id != null && id.equals(other.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return OrderLine.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "OrderLine[id=%d, quantity=%d]".formatted(id, quantity);
+    }
 }
