@@ -35,6 +35,7 @@ shop-spring-boot
 .\mvnw.cmd spring-boot:run                                      # default profile: in-memory H2
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"     # dev: H2 console + DEBUG logging
 .\mvnw.cmd clean verify                                         # run all tests (JDK 25 only)
+```
 
 ## Contents
 
@@ -46,7 +47,29 @@ shop-spring-boot
 6.
 
 ---
-## Task 2
+
+## Task 2: Associations, cascading and entity identity
+
+### What was added
+
+- `Order.lines`: `@OneToMany(mappedBy = "order", cascade = ALL, orphanRemoval = true)` with the helpers `addLine`, `removeLine` and `total()`.
+- `Product` ↔ `Tag` many-to-many through `product_tag` (`Product` is the owning side, `Tag` is the inverse side), with `Product.tag(Tag)` updating both sides.
+- Hand-written `equals`, `hashCode` and `toString` on `Customer`, `Product`, `Tag`, `Order` and `OrderLine`.
+- `OrderCascadeTest` (2 tests) and `EntityIdentityTest` (3 tests).
+
+### How to run the tests
+
+```bash
+mvnw test -Dtest=OrderCascadeTest,EntityIdentityTest
+```
+
+Expected: `Tests run: 5, Failures: 0, Errors: 0` and `BUILD SUCCESS`.
+
+To see only the SQL lines and the summary:
+
+```bash
+mvnw test -Dtest=OrderCascadeTest,EntityIdentityTest | findstr /C:"Hibernate: insert into orders" /C:"Hibernate: insert into order_line" /C:"Hibernate: delete from" /C:"Hibernate: update" /C:"Tests run" /C:"BUILD"
+```
 
 ### Persist cascade
 
@@ -77,26 +100,7 @@ delete from order_line where id=?
 delete from orders where id=? and version=?
 ```
 
-### toString pitfall
+### Entity identity
 
-I temporarily put `lines` in `Order.toString()` and `order` in `OrderLine.toString()`. Printing an order then failed in two ways:
-
-```
-java.lang.StackOverflowError
-org.hibernate.LazyInitializationException: Cannot lazily initialize collection of role 'edu.itc.shop.domain.Order.lines' with key '2' (no session)
-```
-
-`StackOverflowError`: the order prints its lines and each line prints its order, forever.
-`LazyInitializationException`: the order was detached, so `lines` could not be loaded without a session.
-
-Fix: `toString()` prints scalar fields only (never `lines`, `order`, `tags`, `products`). I reverted the change.
-
-### Result
-
-```
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
-BUILD SUCCESS
-```
-
-![Tests passed](screenshots/task2-tests-passed.png)
-![toString pitfall](screenshots/task2-tostring-pitfall.png)
+- `equals` is true when both objects have the same class and the same non-null id.
+- `hashCode` returns a constant per class, so a new `Product` put in a `HashSet` is still found after `persist` gives it an
