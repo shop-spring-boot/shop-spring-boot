@@ -5,6 +5,13 @@ spring:
     url: jdbc:h2:mem:shopdb;DB_CLOSE_DELAY=-1
     username: sa
     password:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        generate_statistics: true
   h2:
     console:
       enabled: false
@@ -38,3 +45,10 @@ info:
 logging:
   pattern:
     console: "%d{HH:mm:ss.SSS} %-5level [%X{requestId:-}] %logger{36} : %msg%n"
+
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
+
+
