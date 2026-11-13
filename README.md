@@ -73,6 +73,14 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 - `ProductView` is a record projection, built with a constructor expression in `@Query`.
 - Derived `Page<ProductView> findByCategory` would fail at boot, because Spring Data can't map `price.amount` to `amount`. That is why I used `@Query`.
 - SQL log check: *(write what you saw here after you call `/api/orders?status=PAID`)*
+
+##Step 4: Specifications
+
+- `ProductRepository` also extends `JpaSpecificationExecutor<Product>`.
+- `ProductSpecs` has `nameContains`, `inCategory`, `cheaperThan` and `inStock`. Each returns a small `Specification` that builds one `WHERE` condition.
+- `ProductSpecs.filter(q, category, maxPrice, inStock)` combines the filters with `Specification.allOf`. Each filter returns `null` when its parameter is absent, and `allOf` skips `null`, so with no filter there is no `WHERE` clause.
+- `root.get("price").get("amount")` walks into the embedded `Money`.
+- Specifications only run when they are called, so they are tested through the `/api/products` endpoint (Step 6) and in the tests (Step 7).
 4. 
 5. 
 6.
