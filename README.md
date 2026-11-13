@@ -39,8 +39,90 @@ shop-spring-boot
 
 ## Contents
 
-1.
-2.
+1. [Task 1: Entities and mappings, validated by Flyway](#task-1-entities-and-mappings-validated-by-flyway)
+2. [Task 2: Associations, cascading and entity identity](#task-2-associations-cascading-and-entity-identity)
+
+## Task 1: Entities and mappings, validated by Flyway
+
+### What I built
+
+- **Setup:** added `spring-boot-starter-data-jpa`, `spring-boot-starter-flyway`, `flyway-database-postgresql` (runtime) and `spring-boot-starter-data-jpa-test` (test) to `pom.xml`. In `application.yml` Hibernate only validates (`ddl-auto: validate`), `open-in-view` is off, `generate_statistics` is on, and the SQL log is on (`org.hibernate.SQL: DEBUG`, `org.hibernate.orm.jdbc.bind: TRACE`).
+- **Migration:** `src/main/resources/db/migration/V1__init.sql` creates five sequences (`INCREMENT BY 50`) and the tables `customer`, `product`, `tag`, `product_tag`, `orders` and `order_line`, with primary keys, foreign keys, `NOT NULL`, `UNIQUE` and `CHECK` constraints (`stock >= 0`, `quantity > 0`, category and status values). The old `schema.sql`, `data*.sql` and `reset.sql` were removed, so Flyway now owns the schema.
+- **Value objects** (package `domain`): `Money(amount, currency)` and `Address(street, city, zip)` are `@Embeddable` records.
+- **Enums:** `Category { BOOKS, HARDWARE, TOYS, FOOD }` and `OrderStatus { NEW, PAID, SHIPPED, CANCELLED }`, both stored with `@Enumerated(EnumType.STRING)`.
+- **Entities:** `Customer` (unique email, `billing` and `shipping` addresses, the shipping columns renamed to `ship_*` with `@AttributeOverride`), `Product` (unique `sku`, `Money price`, `Category`, `stock`), `Tag` (unique name), `Order` (`@Table(name = "orders")`, lazy `@ManyToOne customer`, `status`, `Instant placedAt`, `@Version version`) and `OrderLine` (lazy `@ManyToOne` to `Order` and `Product`, `quantity`, `Money unitPrice`).
+- **Ids:** every id is a `Long` with `GenerationType.SEQUENCE`, a named generator and `allocationSize = 50`, which matches `INCREMENT BY 50` in `V1__init.sql`. Each entity has a protected no-argument constructor and no `setId`.
+
+### Start-up check
+
+Flyway runs first and Hibernate validates the result:
+
+```
+org.flywaydb.core.FlywayExecutor : Database: jdbc:h2:mem:shopdb (H2 2.4)
+o.f.core.internal.command.DbValidate : Successfully validated 1 migration
+o.f.core.internal.command.DbMigrate : Migrating schema "PUBLIC" to version "1 - init"
+o.f.core.internal.command.DbMigrate : Successfully applied 1 migration to schema "PUBLIC", now at version v1
+org.hibernate.orm.core : HHH000001: Hibernate ORM core version 7.4.5.Final
+o.s.o.j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+```
+
+Hibernate started without a `SchemaManagementException`.
+
+### Error 1: `CHAR(3)` against `VARCHAR`
+
+My first start failed on the `currency` column, which `V1__init.sql` declares as `CHAR(3)`:
+
+```
+SchemaManagementException: Schema validation: wrong column type encountered in column [currency]
+in table [order_line]; found [character (Types#CHAR)], but expecting [varchar(3) (Types#VARCHAR)]
+```
+
+Hibernate maps a Java `String` to `VARCHAR` by default, and its validator treats `CHAR` and `VARCHAR` as different types. **Fix:** I added `@JdbcTypeCode(SqlTypes.CHAR)` on `Money.currency`, which keeps `CHAR(3)` in the migration.
+
+### Error 2: wrong column name (on purpose)
+
+**What I changed:** in `V1__init.sql` only, I renamed `sku` to `code` in the `product` table and started the app.
+
+```
+PASTE THE EXACT SchemaManagementException LINE HERE (it should say a column [sku] is missing in table [product])
+```
+
+**Explanation:** Hibernate compares every mapped column with the real table at start-up. `Product.sku` has no matching column, so validation fails and the application does not start. **Reverted:** yes, the column is `sku` again.
+
+### Error 3: wrong sequence step (on purpose)
+
+**What I changed:** in `V1__init.sql` only, I declared `product_seq` with `INCREMENT BY 1`.
+
+```
+PASTE THE EXACT ERROR LINE HERE (it should mention the sequence increment size and the allocationSize of 50)
+```
+
+**Explanation:** `@SequenceGenerator(allocationSize = 50)` makes Hibernate reserve 50 ids per call to the sequence. That only works if the database sequence also steps by 50, so Hibernate refuses to start when the two disagree. **Reverted:** yes, it is `INCREMENT BY 50` again.
+
+### ProductMappingTest
+
+`ProductMappingTest` (`@DataJpaTest` with `@AutoConfigureTestDatabase(replace = NONE)`, so Flyway and `validate` run in the test too) persists a `Product` with `TestEntityManager`, calls `flush()` and `clear()`, then reloads it by id and asserts that `Money` and `Category` survive the round trip. A native query then reads the raw `category` column and asserts it contains the text `HARDWARE`, not a number.
+
+```
+Tests run: 1, Failures: 0, Errors: 0   (paste your real line)
+```
+
+Run it with:
+
+```powershell
+.\mvnw.cmd test -Dtest=ProductMappingTest
+```
+
+### Checklist
+
+- [x] Entities mapped, `V1__init.sql` written, Flyway applies it
+- [x] Hibernate starts without `SchemaManagementException`
+- [x] `Money` and `Address` are embeddables; enums use `EnumType.STRING`
+- [ ] Error 2 and Error 3 pasted above
+- [ ] `ProductMappingTest` result pasted above
+- [ ] Tag `task-1`
+
+---
 
 ## Task 3
 
