@@ -1,7 +1,11 @@
 package edu.itc.shop.domain;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,6 +47,9 @@ public class Order {
     @Column(name = "placed_at", nullable = false)
     private Instant placedAt;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderLine> lines = new ArrayList<>();
+
     @Version
     private long version;
 
@@ -55,11 +62,30 @@ public class Order {
         this.placedAt = placedAt;
     }
 
+    public OrderLine addLine(Product product, int quantity) {
+        OrderLine line = new OrderLine(this, product, quantity, product.getPrice());
+        lines.add(line);
+        return line;
+    }
+
+    public void removeLine(OrderLine line) {
+        lines.remove(line);
+        line.setOrder(null);
+    }
+
+    public Money total() {
+        return lines.stream()
+                .map(l -> l.getUnitPrice().times(l.getQuantity()))
+                .reduce(Money.eur("0"),
+                        (a, b) -> new Money(a.amount().add(b.amount()), a.currency()));
+    }
+
     public Long getId() { return id; }
     public Customer getCustomer() { return customer; }
     public OrderStatus getStatus() { return status; }
     public Instant getPlacedAt() { return placedAt; }
     public long getVersion() { return version; }
+    public List<OrderLine> getLines() { return Collections.unmodifiableList(lines); }
 
     public void setStatus(OrderStatus status) { this.status = status; }
    
@@ -82,5 +108,20 @@ public class Order {
         return lines.stream()
                 .map(l -> l.getUnitPrice().times(l.getQuantity()))
                 .reduce(Money.eur("0"), (a, b) -> new Money(a.amount().add(b.amount()), a.currency()));
+
+    // NEW (Task 2, step 3)
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof Order other && id != null && id.equals(other.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return Order.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Order[id=%d, status=%s]".formatted(id, status);
     }
 }

@@ -1,5 +1,9 @@
 package edu.itc.shop.domain;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -53,6 +57,13 @@ public class Product {
     @Column(nullable = false)
     private int stock;
 
+    // NEW (Task 2, step 2): Product is the owning side of the many-to-many
+    @ManyToMany
+    @JoinTable(name = "product_tag",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();
+
     protected Product() {
         // required by JPA
     }
@@ -75,4 +86,28 @@ public class Product {
     public void setName(String name) { this.name = name; }
     public void setPrice(Money price) { this.price = price; }
     public void setStock(int stock) { this.stock = stock; }
+
+    // NEW (Task 2, step 2): updates both sides
+    public void tag(Tag tag) {
+        tags.add(tag);
+        tag.addProduct(this);
+    }
+
+    public Set<Tag> getTags() { return Collections.unmodifiableSet(tags); }
+
+    // NEW (Task 2, step 3)
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof Product other && id != null && id.equals(other.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return Product.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Product[id=%d, sku=%s, name=%s]".formatted(id, sku, name);
+    }
 }

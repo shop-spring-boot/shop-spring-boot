@@ -50,4 +50,20 @@ public class Customer {
     public String getEmail() { return email; }
     public Address getBilling() { return billing; }
     public Address getShipping() { return shipping; }
+
+    // NEW (Task 2, step 3)
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof Customer other && id != null && id.equals(other.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return Customer.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Customer[id=%d, name=%s, email=%s]".formatted(id, name, email);
+    }
 }
