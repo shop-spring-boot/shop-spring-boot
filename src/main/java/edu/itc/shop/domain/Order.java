@@ -12,13 +12,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -29,12 +30,12 @@ public class Order {
     @SequenceGenerator(name = "orders_gen", sequenceName = "orders_seq", allocationSize = 50)
     private Long id;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderLine> lines = new ArrayList<>();
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderLine> lines = new ArrayList<>();
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private OrderStatus status;
@@ -61,7 +62,25 @@ public class Order {
     public long getVersion() { return version; }
 
     public void setStatus(OrderStatus status) { this.status = status; }
-    public void addLine(Product product, int quantity) {
-        lines.add(new OrderLine(this, product, quantity, product.getPrice()));
+   
+    public List<OrderLine> getLines() {
+        return Collections.unmodifiableList(lines);
+    }
+
+    public OrderLine addLine(Product product, int quantity) {
+        OrderLine line = new OrderLine(this, product, quantity, product.getPrice());
+        lines.add(line);
+        return line;
+    }
+
+    public void removeLine(OrderLine line) {
+        lines.remove(line);
+        line.setOrder(null);
+    }
+
+    public Money total() {
+        return lines.stream()
+                .map(l -> l.getUnitPrice().times(l.getQuantity()))
+                .reduce(Money.eur("0"), (a, b) -> new Money(a.amount().add(b.amount()), a.currency()));
     }
 }

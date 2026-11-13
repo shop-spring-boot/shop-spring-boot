@@ -29,10 +29,11 @@ public final class ProductSpecs {
 
     public static Specification<Product> filter(String q, Category category,
                                                 BigDecimal maxPrice, Boolean inStock) {
-        return Specification.allOf(
-                q == null || q.isBlank() ? null : nameContains(q),
-                category == null ? null : inCategory(category),
-                maxPrice == null ? null : cheaperThan(maxPrice),
-                Boolean.TRUE.equals(inStock) ? inStock() : null);
+        Specification<Product> spec = (root, query, cb) -> cb.conjunction();
+        if (q != null && !q.isBlank())      spec = spec.and(nameContains(q));
+        if (category != null)               spec = spec.and(inCategory(category));
+        if (maxPrice != null)               spec = spec.and(cheaperThan(maxPrice));
+        if (Boolean.TRUE.equals(inStock))   spec = spec.and(inStock());
+        return spec;
     }
 }

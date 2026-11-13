@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController // this class handles web requests, and return values are written as JSON.
-@RequestMapping("/api/orders") // the base URL for everything in the class.
+@RequestMapping("/api/v1/orders") // the base URL for everything in the class.
 public class OrderController {
 
     private final OrderService service;
