@@ -106,7 +106,9 @@ delete from orders where id=? and version=?
 - `hashCode` returns a constant per class, so a new `Product` put in a `HashSet` is still found after `persist` gives it an id.
 
 # Challenge: — Reporting and Bulk Module
-
+```Test 
+.\mvnw.cmd -q test -Dtest=StockReservationTest,BulkImportTest 
+```
 ## A. Feature overview
 
 This module uses the existing `edu.itc.shop.domain` JPA model and Flyway schema; the older JDBC product/order endpoints remain in place.
