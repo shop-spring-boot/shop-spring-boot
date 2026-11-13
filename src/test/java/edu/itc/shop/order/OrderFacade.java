@@ -1,4 +1,4 @@
-package edu.itc.shop.service;
+package edu.itc.shop.order;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;

@@ -1,11 +1,10 @@
-package edu.itc.shop.service;
+package edu.itc.shop.order;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import edu.itc.shop.domain.Order;
 import edu.itc.shop.domain.OrderStatus;
-import edu.itc.shop.order.OrderRepository;
 import edu.itc.shop.web.dto.OrderDto;
 
 @Service

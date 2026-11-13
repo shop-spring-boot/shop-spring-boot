@@ -1,4 +1,4 @@
-package edu.itc.shop.service;
+package edu.itc.shop.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import edu.itc.shop.domain.Tag;
-import edu.itc.shop.repository.TagRepository;
+import edu.itc.shop.product.TagRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")

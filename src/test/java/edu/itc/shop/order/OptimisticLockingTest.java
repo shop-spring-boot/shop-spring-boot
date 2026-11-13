@@ -1,4 +1,4 @@
-package edu.itc.shop.service;
+package edu.itc.shop.order;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +23,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import edu.itc.shop.domain.Order;
 import edu.itc.shop.domain.OrderStatus;
 import edu.itc.shop.order.OrderRepository;
+
+import edu.itc.shop.support.TestData;
 
 @SpringBootTest
 @ActiveProfiles("test")
