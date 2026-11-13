@@ -16,30 +16,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.SequenceGenerator;
-import java.util.Set;
-import java.util.HashSet;
 
 @Entity // this class is a table, and Hibernate now manages it.
 public class Product {
 
-    
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_gen")
     @SequenceGenerator(name = "product_gen", sequenceName = "product_seq", allocationSize = 50)
     private Long id;
-
-    @ManyToMany
-    @JoinTable(name = "product_tag",
-            joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private Set<Tag> tags = new HashSet<>();
-
-    public Set<Tag> getTags() { return tags; }
-
-    public void tag(Tag tag) {
-        tags.add(tag);
-        tag.getProducts().add(this);
-    }
 
     @Column(nullable = false, unique = true, length = 40)
     private String sku;
@@ -87,13 +71,15 @@ public class Product {
     public void setPrice(Money price) { this.price = price; }
     public void setStock(int stock) { this.stock = stock; }
 
+    public Set<Tag> getTags() { 
+        return Collections.unmodifiableSet(tags); 
+    }
+
     // NEW (Task 2, step 2): updates both sides
     public void tag(Tag tag) {
         tags.add(tag);
-        tag.addProduct(this);
+        tag.getProducts().add(this);
     }
-
-    public Set<Tag> getTags() { return Collections.unmodifiableSet(tags); }
 
     // NEW (Task 2, step 3)
     @Override
