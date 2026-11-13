@@ -59,6 +59,12 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 **Explanation:** Spring Data parses every repository method name when the application starts. It splits `findByCustomerEmaliAndStatus...` into properties (`customer.emali`, `status`) and checks them against the entities. `Customer` has no `emali` property, so the `orderRepository` bean fails and the whole application stops before it starts.
 
 **Reverted:** yes, the method is back to `findByCustomerEmail...`.
+
+## Step 2: JPQL and native queries
+
+- `findWithLinesByCustomerEmail`: JPQL with `join fetch` loads an order, its lines and each line's product in one query. This avoids the N+1 problem (one extra query per order).
+- `countLinesByStatus`: JPQL query that counts order lines by the order's status.
+- Both queries are checked when the app starts, and the app starts without errors.
 4. 
 5. 
 6.
