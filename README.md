@@ -40,7 +40,25 @@ shop-spring-boot
 
 1. 
 2. 
-3. 
+## Task 3, Step 1: Typo in a derived query
+
+**What I changed:** in `OrderRepository`, I renamed
+`findByCustomerEmailAndStatusOrderByPlacedAtDesc` to
+`findByCustomerEmaliAndStatusOrderByPlacedAtDesc` (typo: `Emali`) and started the app.
+
+**Boot error:**
+
+​```
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'orderRepository' defined in edu.itc.shop.order.OrderRepository defined in @EnableJpaRepositories declared on DataJpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: No property 'emali' found for type 'Customer'; Did you mean 'email'; Traversed path: Order.customer
+
+Caused by: org.springframework.data.repository.query.QueryCreationException: Cannot create query for method [OrderRepository.findByCustomerEmaliAndStatusOrderByPlacedAtDesc(java.lang.String,edu.itc.shop.domain.OrderStatus)]; No property 'emali' found for type 'Customer'; Did you mean 'email'; Traversed path: Order.customer
+
+Caused by: org.springframework.data.core.PropertyReferenceException: No property 'emali' found for type 'Customer'; Did you mean 'email'; Traversed path: Order.customer
+​```
+
+**Explanation:** Spring Data parses every repository method name when the application starts. It splits `findByCustomerEmaliAndStatus...` into properties (`customer.emali`, `status`) and checks them against the entities. `Customer` has no `emali` property, so the `orderRepository` bean fails and the whole application stops before it starts.
+
+**Reverted:** yes, the method is back to `findByCustomerEmail...`.
 4. 
 5. 
 6.

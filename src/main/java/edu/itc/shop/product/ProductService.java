@@ -10,9 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProductService {
 
-    private final ProductRepository repo;
+    private final JdbcProductRepository repo;
 
-    public ProductService(ProductRepository repo) {
+    public ProductService(JdbcProductRepository repo) {
         this.repo = repo;
     }
 

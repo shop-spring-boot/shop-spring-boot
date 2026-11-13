@@ -10,10 +10,10 @@ import org.springframework.dao.DuplicateKeyException;
 import java.math.BigDecimal;
 
 @JdbcTest
-@Import(ProductRepository.class)
+@Import(JdbcProductRepository.class)
 class ProductRepositoryTest {
 
-    @Autowired ProductRepository repo;
+    @Autowired JdbcProductRepository repo;
 
     @Test
     void findAllReturnsFiveProducts() {
