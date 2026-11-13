@@ -61,4 +61,7 @@ public class Order {
     public long getVersion() { return version; }
 
     public void setStatus(OrderStatus status) { this.status = status; }
+    public void addLine(Product product, int quantity) {
+        lines.add(new OrderLine(this, product, quantity, product.getPrice()));
+    }
 }
