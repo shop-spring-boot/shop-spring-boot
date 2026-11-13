@@ -40,7 +40,8 @@ shop-spring-boot
 
 1. 
 2. 
-## Task 3, Step 1: Typo in a derived query
+## Task 3
+##Step 1: Typo in a derived query
 
 **What I changed:** in `OrderRepository`, I renamed
 `findByCustomerEmailAndStatusOrderByPlacedAtDesc` to
@@ -65,6 +66,13 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 - `findWithLinesByCustomerEmail`: JPQL with `join fetch` loads an order, its lines and each line's product in one query. This avoids the N+1 problem (one extra query per order).
 - `countLinesByStatus`: JPQL query that counts order lines by the order's status.
 - Both queries are checked when the app starts, and the app starts without errors.
+
+## Step 3: Projections
+
+- `OrderSummary` is an interface projection, so Hibernate selects only the listed columns.
+- `ProductView` is a record projection, built with a constructor expression in `@Query`.
+- Derived `Page<ProductView> findByCategory` would fail at boot, because Spring Data can't map `price.amount` to `amount`. That is why I used `@Query`.
+- SQL log check: *(write what you saw here after you call `/api/orders?status=PAID`)*
 4. 
 5. 
 6.
