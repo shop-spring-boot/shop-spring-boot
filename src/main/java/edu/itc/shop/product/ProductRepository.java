@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
-@Repository
+@Repository("jdbcProductRepository")
 public class ProductRepository {
     private final JdbcClient jdbc;
 

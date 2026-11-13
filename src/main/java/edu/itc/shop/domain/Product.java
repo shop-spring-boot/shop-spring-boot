@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Version;
 
 @Entity // this class is a table, and Hibernate now manages it.
 public class Product {
@@ -40,6 +41,9 @@ public class Product {
 
     @Column(nullable = false)
     private int stock;
+
+    @Version
+    private long version;
 
     // NEW (Task 2, step 2): Product is the owning side of the many-to-many
     @ManyToMany

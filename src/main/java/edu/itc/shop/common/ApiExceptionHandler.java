@@ -16,6 +16,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 
 import edu.itc.shop.product.InsufficientStockException;
 import edu.itc.shop.product.ProductNotFoundException;
+import edu.itc.shop.stock.OutOfStockException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -47,6 +48,16 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(InsufficientStockException.class)
     public ProblemDetail handleInsufficientStock(InsufficientStockException ex, WebRequest req) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Conflict");
+        if (req instanceof ServletWebRequest swr) {
+            problem.setInstance(URI.create(swr.getRequest().getRequestURI()));
+        }
+        return problem;
+    }
+
+    @ExceptionHandler(OutOfStockException.class)
+    public ProblemDetail handleOutOfStock(OutOfStockException ex, WebRequest req) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problem.setTitle("Conflict");
         if (req instanceof ServletWebRequest swr) {

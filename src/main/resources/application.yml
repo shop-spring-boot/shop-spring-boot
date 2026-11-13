@@ -12,6 +12,8 @@ spring:
     properties:
       hibernate:
         generate_statistics: true
+        jdbc:
+          batch_size: 500
   h2:
     console:
       enabled: false
