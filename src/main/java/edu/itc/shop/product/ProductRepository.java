@@ -2,13 +2,17 @@ package edu.itc.shop.product;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
 @Repository("jdbcProductRepository")
 public class ProductRepository {
     private final JdbcClient jdbc;
+
+    @Value("${shop.currency:USD}")
+    private String currency;
 
     public ProductRepository(JdbcClient jdbc) { this.jdbc = jdbc; }
 
@@ -31,11 +35,19 @@ public class ProductRepository {
     }
 
     public long insert(Product p) {
-        var keys = new GeneratedKeyHolder();
-        jdbc.sql("INSERT INTO product(name, price, stock) VALUES (:name, :price, :stock)")
-            .paramSource(p)
-            .update(keys, "id");
-        return keys.getKey().longValue();
+        long id = jdbc.sql("SELECT nextval('product_seq')")
+                .query(Long.class).single();
+        jdbc.sql("INSERT INTO product(id, sku, name, category, amount, currency, stock) " +
+                 "VALUES (:id, :sku, :name, :category, :price, :currency, :stock)")
+            .param("id", id)
+            .param("sku", "SKU-" + UUID.randomUUID())
+            .param("name", p.name())
+            .param("category", "HARDWARE")
+            .param("price", p.price())
+            .param("currency", currency)
+            .param("stock", p.stock())
+            .update();
+        return id;
     }
 
     public int updateStock(long id, int delta) {

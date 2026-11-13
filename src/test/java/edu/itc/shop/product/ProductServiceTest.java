@@ -13,6 +13,17 @@ class ProductServiceTest {
     @Autowired ProductRepository repo;
 
     @Test
+    void createPersistsProductUsingCurrentSchema() {
+        ProductDto created = service.create(
+                new CreateProduct("Test product", new java.math.BigDecimal("12.34"), 8));
+
+        Product saved = repo.findById(created.id()).orElseThrow();
+        assertEquals("Test product", saved.name());
+        assertEquals(new java.math.BigDecimal("12.34"), saved.price());
+        assertEquals(8, saved.stock());
+    }
+
+    @Test
     void restockRollsBackWhenSourceHasTooLittleStock() {
         int before1 = repo.findById(1).orElseThrow().stock();
         int before2 = repo.findById(2).orElseThrow().stock();
