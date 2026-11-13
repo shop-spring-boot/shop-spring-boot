@@ -13,18 +13,18 @@ public class ProductRepository {
     public ProductRepository(JdbcClient jdbc) { this.jdbc = jdbc; }
 
     public List<Product> findAll() {
-        return jdbc.sql("SELECT id, name, price, stock FROM product ORDER BY id")
+        return jdbc.sql("SELECT id, name, amount AS price, stock FROM product ORDER BY id")
                    .query(Product.class).list();
     }
 
     public Optional<Product> findById(long id) {
-        return jdbc.sql("SELECT id, name, price, stock FROM product WHERE id = :id")
+        return jdbc.sql("SELECT id, name, amount AS price, stock FROM product WHERE id = :id")
                    .param("id", id)
                    .query(Product.class).optional();
     }
 
     public List<Product> findByNameContaining(String text) {
-        return jdbc.sql("SELECT id, name, price, stock FROM product " +
+        return jdbc.sql("SELECT id, name, amount AS price, stock FROM product " +
                         "WHERE LOWER(name) LIKE :text ORDER BY id")
                    .param("text", "%" + text.toLowerCase() + "%")
                    .query(Product.class).list();
