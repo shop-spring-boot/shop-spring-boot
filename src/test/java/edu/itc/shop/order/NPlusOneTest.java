@@ -36,5 +36,19 @@ class NPlusOneTest {
         report.linesPerPaidOrderFast();
         // 1 single query fetches all 50 orders and all their lines at the same time
         assertThat(counter.count()).isEqualTo(1); 
+    }
+    @Test 
+    void benchmarkForReadme() {
+    System.out.println("--- WARMING UP JVM ---");
+    for (int i = 0; i < 3; i++) {
+        report.linesPerPaidOrder();
+        report.linesPerPaidOrderFast();
+    }
+    
+    System.out.println("--- ACTUAL BENCHMARK RUN ---");
+    for (int i = 0; i < 5; i++) {
+        report.linesPerPaidOrder();
+        report.linesPerPaidOrderFast();
+    }
 }
 }

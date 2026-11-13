@@ -12,13 +12,17 @@ import org.springframework.stereotype.Component;
 public class TimingAspect {
     private static final Logger log = LoggerFactory.getLogger(TimingAspect.class);
 
-    @Around("execution(public * edu.itc.shop.product.*Service.*(..)) || execution(public * edu.itc.shop.notification.*Service.*(..))")
+    // Added the order package to the execution list
+    @Around("execution(public * edu.itc.shop.product.*Service.*(..)) || " +
+            "execution(public * edu.itc.shop.notification.*Service.*(..)) || " +
+            "execution(public * edu.itc.shop.order.*Service.*(..))")
     public Object time(ProceedingJoinPoint pjp) throws Throwable {
         long t0 = System.nanoTime();
         try {
             return pjp.proceed();
         } finally {
-            log.debug("{} took {} us", pjp.getSignature().toShortString(),
+            // Changed to log.info so it prints in the console
+            log.info("{} took {} us", pjp.getSignature().toShortString(),
                     (System.nanoTime() - t0) / 1_000);
         }
     }

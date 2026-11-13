@@ -178,3 +178,15 @@ delete from orders where id=? and version=?
   (paste the lines: "Getting transaction for [...OrderService.changeStatus]", the update with version=?, the rollback)
 - **Retry**: `OrderFacade.changeStatusWithRetry` lives in a separate bean (the exception is raised at commit),
   retries up to 3 times; both writers succeed and the version rises by 2.
+
+## Task 5: N+1 performance problem
+
+- **The Problem:** The naive `linesPerPaidOrder()` implementation fetches orders with a single query, but then triggers an additional `SELECT` query for each individual order when `o.getLines().size()` is called inside the loop. For 50 orders, this executes exactly 51 queries (the N+1 problem).
+- **The Solution:** Adding `@EntityGraph(attributePaths = "lines")` to a new `findAllByStatusWithLines` repository query forces Hibernate to fetch the orders and their associated lines together using a single `JOIN` query.
+
+| variant                 | statements | median ms |
+|-------------------------|-----------:|----------:|
+| naive (lazy loop)       |         51 |       6.7 |
+| join fetch              |          1 |       4.1 |
+| @EntityGraph            |          1 |       4.4 |
+| @BatchSize(16)          |          5 |       7.9 |
