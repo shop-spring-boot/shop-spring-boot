@@ -3,14 +3,16 @@ package edu.itc.shop.order;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
-import edu.itc.shop.domain.Order;
-import edu.itc.shop.domain.OrderStatus;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import edu.itc.shop.domain.Order;
+import edu.itc.shop.domain.OrderStatus;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomerEmailAndStatusOrderByPlacedAtDesc(String email, OrderStatus status);
     // List<Order> findByCustomerEmaliAndStatusOrderByPlacedAtDesc(String email, OrderStatus status);
@@ -31,4 +33,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countLinesByStatus(@Param("status") OrderStatus status);
 
     Page<OrderSummary> findByStatus(OrderStatus status, Pageable pageable);
+    List<Order> findAllByStatus(OrderStatus status);
+    
+    @EntityGraph(attributePaths = "lines")
+    @Query("SELECT o FROM Order o WHERE o.status = :status")
+    List<Order> findAllByStatusWithLines(@Param("status") OrderStatus status);
 }

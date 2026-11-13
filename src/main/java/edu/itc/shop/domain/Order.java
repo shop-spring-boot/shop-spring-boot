@@ -20,10 +20,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import jakarta.persistence.CascadeType;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -38,8 +34,6 @@ public class Order {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderLine> lines = new ArrayList<>();
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private OrderStatus status;
@@ -62,33 +56,13 @@ public class Order {
         this.placedAt = placedAt;
     }
 
-    public OrderLine addLine(Product product, int quantity) {
-        OrderLine line = new OrderLine(this, product, quantity, product.getPrice());
-        lines.add(line);
-        return line;
-    }
-
-    public void removeLine(OrderLine line) {
-        lines.remove(line);
-        line.setOrder(null);
-    }
-
-    public Money total() {
-        return lines.stream()
-                .map(l -> l.getUnitPrice().times(l.getQuantity()))
-                .reduce(Money.eur("0"),
-                        (a, b) -> new Money(a.amount().add(b.amount()), a.currency()));
-    }
-
     public Long getId() { return id; }
     public Customer getCustomer() { return customer; }
     public OrderStatus getStatus() { return status; }
     public Instant getPlacedAt() { return placedAt; }
     public long getVersion() { return version; }
-    public List<OrderLine> getLines() { return Collections.unmodifiableList(lines); }
-
     public void setStatus(OrderStatus status) { this.status = status; }
-   
+
     public List<OrderLine> getLines() {
         return Collections.unmodifiableList(lines);
     }
@@ -107,7 +81,9 @@ public class Order {
     public Money total() {
         return lines.stream()
                 .map(l -> l.getUnitPrice().times(l.getQuantity()))
-                .reduce(Money.eur("0"), (a, b) -> new Money(a.amount().add(b.amount()), a.currency()));
+                .reduce(Money.eur("0"),
+                        (a, b) -> new Money(a.amount().add(b.amount()), a.currency()));
+    }
 
     // NEW (Task 2, step 3)
     @Override

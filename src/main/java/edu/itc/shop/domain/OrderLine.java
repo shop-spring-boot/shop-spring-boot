@@ -50,7 +50,6 @@ public class OrderLine {
     public int getQuantity() { return quantity; }
     public Money getUnitPrice() { return unitPrice; }
 
-    void setOrder(Order order) { this.order = order; }
 
     // NEW (Task 2, step 3)
     @Override
