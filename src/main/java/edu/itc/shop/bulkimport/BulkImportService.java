@@ -38,6 +38,7 @@ public class BulkImportService {
     private ProductCsvReader.ImportCount importStateless(Path csv) {
         SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
         try (StatelessSession session = sessionFactory.openStatelessSession()) {
+            session.setJdbcBatchSize(500);
             Transaction transaction = session.beginTransaction();
             try {
                 ProductCsvReader.ImportCount count =

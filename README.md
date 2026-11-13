@@ -307,21 +307,21 @@ The 10-thread test started all reservations behind a latch for a product with st
 
 | Strategy | Wall time | Throughput | Optimistic retries |
 |---|---:|---:|---:|
-| Pessimistic lock | 44 ms | 223.31 reservations/s | 0 |
-| Optimistic lock | 39 ms | 250.20 reservations/s | 18 |
-| Atomic conditional update | 29 ms | 335.23 reservations/s | 0 |
+| Pessimistic lock | 67 ms | 147.40 reservations/s | 0 |
+| Optimistic lock | 44 ms | 226.81 reservations/s | 14 |
+| Atomic conditional update | 38 ms | 258.64 reservations/s | 0 |
 
 ## F. Bulk import of products
 
-`BulkImportService.importCsv(Path)` unwraps the configured `SessionFactory`, opens `sessionFactory.openStatelessSession()`, and imports the semicolon-delimited `sku;name;amount;currency;category;stock` file as a stream. It validates each row, skips the header, inserts chunks of 500 with Hibernate 7 `insertMultiple(chunk)`, clears the chunk, and commits only after the whole import succeeds; failures roll the transaction back. `hibernate.jdbc.batch_size` is set to 500. The stateless session avoids a first-level persistence context. The two JPA comparisons use `saveAll` in the same transaction, either retaining managed entities until commit or flushing and clearing every 500 rows.
+`BulkImportService.importCsv(Path)` unwraps the configured `SessionFactory`, opens `sessionFactory.openStatelessSession()`, sets the session JDBC batch size to 500, and imports the semicolon-delimited `sku;name;amount;currency;category;stock` file as a stream. It validates each row, skips the header, inserts chunks of 500 with Hibernate 7 `insertMultiple(chunk)`, clears the chunk, and commits only after the whole import succeeds; failures roll the transaction back. The global `hibernate.jdbc.batch_size` is also set to 500. The stateless session avoids a first-level persistence context. The two JPA comparisons use `saveAll` in the same transaction, either retaining managed entities until commit or flushing and clearing every 500 rows.
 
 `BulkImportTest` generated 50,000 rows for each strategy, verified all row counts and representative field values, and exercised malformed input and duplicate-SKU rollback. Measured values below are from one run on the in-process H2 database. Peak heap is sampled every 2 ms and includes JVM plus H2's in-memory table/index storage; these figures are not a portable per-entity memory guarantee. Timings are actual test measurements, not fixed targets:
 
 | Strategy | Imported rows | Wall time | Peak heap |
 |---|---:|---:|---:|
-| StatelessSession | 50,000 | 1,981 ms | 156,912,280 bytes |
-| saveAll without clear | 50,000 | 2,364 ms | 306,171,072 bytes |
-| saveAll with flush/clear | 50,000 | 1,184 ms | 193,792,488 bytes |
+| StatelessSession | 50,000 | 2,680 ms | 142,279,000 bytes |
+| saveAll without clear | 50,000 | 2,306 ms | 338,421,256 bytes |
+| saveAll with flush/clear | 50,000 | 825 ms | 212,251,432 bytes |
 
 Each import processed 100 chunks of 500. The StatelessSession run completed below the 10-second H2 target in this environment. Actual insert SQL for the `Product` mapping, captured from Hibernate SQL logs:
 
@@ -333,16 +333,16 @@ values (?,?,?,?,?,?,?,?)
 
 ## G. Repository method-to-SQL reference
 
-Hibernate SQL snippets below were captured from the integration-test logs with bound values represented by `?`. The existing `JdbcClient` and raw-JDBC repository statements are handwritten SQL, not Hibernate-generated; their SQL is transcribed from the existing repository source. Those older methods use the legacy `price`, `total`, `qty`, and `unit_price` columns, which do not match the current Flyway JPA schema (`amount`, `quantity`, `currency`). Their pre-existing tests also reference a missing `reset.sql`; see the test status reported by the implementation run.
+Hibernate SQL snippets below were captured from the integration-test logs with bound values represented by `?`. The `JdbcClient` and raw-JDBC repository statements are handwritten SQL, not Hibernate-generated; their SQL is transcribed from the repository source. The raw-JDBC product repository and JDBC order repository still use legacy `price`, `total`, `qty`, and `unit_price` columns that do not match the current Flyway schema. The `JdbcClient` product repository instead maps `amount` to its legacy `price` record field and inserts using the current product columns. The JDBC order repository's tests also reference a missing `reset.sql`.
 
 | Repository | Method | Purpose | Generated SQL |
 |---|---|---|---|
-| `edu.itc.shop.product.ProductRepository` (JDBC) | `findAll` | List legacy products | `select id, name, price, stock from product order by id` (handwritten) |
-| same | `findById` | Legacy lookup | `select id, name, price, stock from product where id = ?` (handwritten) |
-| same | `findByNameContaining` | Case-insensitive legacy search | `select id, name, price, stock from product where lower(name) like ? order by id` (handwritten) |
-| same | `insert` | Legacy product insert / generated key | `insert into product(name, price, stock) values (?, ?, ?)` (handwritten) |
+| `edu.itc.shop.product.ProductRepository` (JDBC) | `findAll` | List products | `select id, name, amount as price, stock from product order by id` (handwritten) |
+| same | `findById` | Product lookup | `select id, name, amount as price, stock from product where id = ?` (handwritten) |
+| same | `findByNameContaining` | Case-insensitive product search | `select id, name, amount as price, stock from product where lower(name) like ? order by id` (handwritten) |
+| same | `insert` | Insert product using the product sequence | `select nextval('product_seq')`; then `insert into product(id, sku, name, category, amount, currency, stock) values (?, ?, ?, ?, ?, ?, ?)` (handwritten) |
 | same | `updateStock` | Conditional stock delta | `update product set stock = stock + ? where id = ? and stock + ? >= 0` (handwritten) |
-| same | `delete` | Legacy product delete | `delete from product where id = ?` (handwritten) |
+| same | `delete` | Product delete | `delete from product where id = ?` (handwritten) |
 | `edu.itc.shop.product.RawJdbcProductRepository` | `findAll` | Raw JDBC product list | `select id, name, price, stock from product order by id` (handwritten) |
 | `edu.itc.shop.order.OrderRepository` (JDBC) | `insert` | Create legacy order and lines | `insert into orders(customer_id, status, placed_at, total) values (?, ?, ?, ?)`; for each line: `insert into order_line(order_id, product_id, qty, unit_price) values (?, ?, ?, ?)` (handwritten) |
 | same | `findById` | Legacy order lookup | `select id, customer_id, status, placed_at, total from orders where id = ?` (handwritten) |
