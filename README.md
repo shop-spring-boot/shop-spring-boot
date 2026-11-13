@@ -39,9 +39,11 @@ shop-spring-boot
 
 ## Contents
 
-1. 
-2. 
+1.
+2.
+
 ## Task 3
+
 ##Step 1: Typo in a derived query
 
 **What I changed:** in `OrderRepository`, I renamed
@@ -73,7 +75,7 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 - `OrderSummary` is an interface projection, so Hibernate selects only the listed columns.
 - `ProductView` is a record projection, built with a constructor expression in `@Query`.
 - Derived `Page<ProductView> findByCategory` would fail at boot, because Spring Data can't map `price.amount` to `amount`. That is why I used `@Query`.
-- SQL log check: *(write what you saw here after you call `/api/orders?status=PAID`)*
+- SQL log check: _(write what you saw here after you call `/api/orders?status=PAID`)_
 
 ##Step 4: Specifications
 
@@ -99,8 +101,9 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 - Native query: `SELECT p.* FROM product p WHERE p.stock < ? ORDER BY p.stock`.
 - Result: `Tests run: 5, Failures: 0, Errors: 0` (paste your real line).
 - The old JDBC tests (`ProductServiceTest`, `RepositoryTest`, etc.) described the old schema (`price`, `orders.total`) and failed against Flyway, so I moved them to `legacy-jdbc/tests`.
-4. 
-5. 
+
+4.
+5.
 6.
 
 ---
@@ -161,3 +164,17 @@ delete from orders where id=? and version=?
 
 - `equals` is true when both objects have the same class and the same non-null id.
 - `hashCode` returns a constant per class, so a new `Product` put in a `HashSet` is still found after `persist` gives it an
+
+## Task 4: states, flush order, optimistic locking
+
+- **Managed vs detached**: `markPaid` has no `save()` and runs exactly one `update orders`.
+  A detached `Product` with `setStock(99)` stays unchanged until `products.save(p)`, which is a merge:
+  1 select + 1 update. (paste the SQL log lines)
+- **Read-only trap**: `wronglyModifyInReadOnly` changes the status but nothing is flushed (FlushMode.MANUAL).
+- **Flush order**: `delete` then `save` of tag "sale" fails with a unique violation, because Hibernate
+  runs INSERT before DELETE. Fix: `tags.flush()` between them. (paste the exception message)
+- **Optimistic locking**: two threads load the same order version; one UPDATE ... where version=? gets 0 rows
+  and throws ObjectOptimisticLockingFailureException. The version rises by exactly 1.
+  (paste the lines: "Getting transaction for [...OrderService.changeStatus]", the update with version=?, the rollback)
+- **Retry**: `OrderFacade.changeStatusWithRetry` lives in a separate bean (the exception is raised at commit),
+  retries up to 3 times; both writers succeed and the version rises by 2.
