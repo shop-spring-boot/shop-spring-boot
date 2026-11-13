@@ -81,6 +81,13 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 - `ProductSpecs.filter(q, category, maxPrice, inStock)` combines the filters with `Specification.allOf`. Each filter returns `null` when its parameter is absent, and `allOf` skips `null`, so with no filter there is no `WHERE` clause.
 - `root.get("price").get("amount")` walks into the embedded `Money`.
 - Specifications only run when they are called, so they are tested through the `/api/products` endpoint (Step 6) and in the tests (Step 7).
+
+## Step 5: DataSeeder
+
+- `DataSeeder` is a `@Component @Profile("dev")` `ApplicationRunner`.
+- It inserts 3 customers, 12 products with tags and 30 orders (2 to 4 lines each, mixed statuses) through the repositories, inside one `@Transactional` method.
+- `Order.addLine(product, quantity)` creates the `OrderLine` with the product's price, and `cascade = ALL` saves the lines with the order.
+- Run it with the `dev` profile: `.\mvnw spring-boot:run "-Dspring-boot.run.profiles=dev"`. The SQL log shows the inserts, and the app starts normally afterwards.
 4. 
 5. 
 6.
