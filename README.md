@@ -88,6 +88,16 @@ Caused by: org.springframework.data.core.PropertyReferenceException: No property
 - It inserts 3 customers, 12 products with tags and 30 orders (2 to 4 lines each, mixed statuses) through the repositories, inside one `@Transactional` method.
 - `Order.addLine(product, quantity)` creates the `OrderLine` with the product's price, and `cascade = ALL` saves the lines with the order.
 - Run it with the `dev` profile: `.\mvnw spring-boot:run "-Dspring-boot.run.profiles=dev"`. The SQL log shows the inserts, and the app starts normally afterwards.
+
+## Step 7: OrderRepositoryTest
+
+`OrderRepositoryTest` (`@DataJpaTest`, Flyway schema) has 5 tests: derived query, fetch join, plain `findById`, native query and projection.
+
+- Fetch join: one `select distinct ... from orders join order_line join product join customer where c1_0.email=?` loads orders, lines and products together. `PersistenceUnitUtil.isLoaded(order, "lines")` is true.
+- Plain `findById`: `select ... from orders where id=?` only, so `lines` is not loaded (`isLoaded` is false). I used `isLoaded` and not `Hibernate.isInitialized(order.getLines())`, because `getLines()` returns `Collections.unmodifiableList(...)`, which always reports initialized.
+- Native query: `SELECT p.* FROM product p WHERE p.stock < ? ORDER BY p.stock`.
+- Result: `Tests run: 5, Failures: 0, Errors: 0` (paste your real line).
+- The old JDBC tests (`ProductServiceTest`, `RepositoryTest`, etc.) described the old schema (`price`, `orders.total`) and failed against Flyway, so I moved them to `legacy-jdbc/tests`.
 4. 
 5. 
 6.
