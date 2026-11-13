@@ -2,7 +2,7 @@ package edu.itc.shop.order;
 
 import edu.itc.shop.audit.Audited;
 import edu.itc.shop.config.ShopProperties;
-import edu.itc.shop.product.ProductRepository;
+import edu.itc.shop.product.JdbcProductRepository;
 import edu.itc.shop.notification.Notifier;
 
 import java.math.BigDecimal;
@@ -19,12 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class OrderService {
 
-    private final OrderRepository orders;
-    private final ProductRepository products;
+    private final JdbcClientOrderRepository orders;
+    private final JdbcProductRepository products;
     private final ShopProperties props;
     private final Notifier notifier;
 
-    public OrderService(OrderRepository orders, ProductRepository products,
+    public OrderService(JdbcClientOrderRepository orders, JdbcProductRepository products,
                         ShopProperties props, @Qualifier("emailNotifier") Notifier notifier) {
         this.orders = orders;
         this.products = products;

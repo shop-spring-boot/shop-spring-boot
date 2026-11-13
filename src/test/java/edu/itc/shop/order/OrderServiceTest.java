@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 import edu.itc.shop.config.ShopProperties;
 import edu.itc.shop.product.Product;
-import edu.itc.shop.product.ProductRepository;
+import edu.itc.shop.product.JdbcProductRepository;
 import edu.itc.shop.notification.Notifier;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test;
 
 class OrderServiceTest {
 
-    private final OrderRepository orders = mock(OrderRepository.class);
-    private final ProductRepository products = mock(ProductRepository.class);
+    private final JdbcClientOrderRepository orders = mock(JdbcClientOrderRepository.class);
+    private final JdbcProductRepository products = mock(JdbcProductRepository.class);
     private final Notifier notifier = mock(Notifier.class);
 
     private OrderService serviceWithTax(String taxRate) {

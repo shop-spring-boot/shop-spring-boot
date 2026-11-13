@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class ProductServiceTest {
 
     @Autowired ProductService service;
-    @Autowired ProductRepository repo;
+    @Autowired JdbcProductRepository repo;
 
     @Test
     void restockRollsBackWhenSourceHasTooLittleStock() {

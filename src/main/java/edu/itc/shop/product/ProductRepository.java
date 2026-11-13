@@ -1,54 +1,29 @@
 package edu.itc.shop.product;
 
 import java.util.List;
-import java.util.Optional;
-import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import edu.itc.shop.domain.Category;
+import edu.itc.shop.domain.Product;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-@Repository
-public class ProductRepository {
-    private final JdbcClient jdbc;
+public interface ProductRepository extends JpaRepository<Product, Long>,
+                                           JpaSpecificationExecutor<Product> {
+    boolean existsBySku(String sku);
+    List<Product> findTop3ByCategoryOrderByPriceAmountDesc(Category category);
+    List<Product> findByTagsName(String name);
+    @Query(value = "SELECT p.* FROM product p WHERE p.stock < :min ORDER BY p.stock",
+        nativeQuery = true)
+    List<Product> findLowStock(@Param("min") int min);
 
-    public ProductRepository(JdbcClient jdbc) { this.jdbc = jdbc; }
-
-    public List<Product> findAll() {
-        return jdbc.sql("SELECT id, name, price, stock FROM product ORDER BY id")
-                   .query(Product.class).list();
-    }
-
-    public Optional<Product> findById(long id) {
-        return jdbc.sql("SELECT id, name, price, stock FROM product WHERE id = :id")
-                   .param("id", id)
-                   .query(Product.class).optional();
-    }
-
-    public List<Product> findByNameContaining(String text) {
-        return jdbc.sql("SELECT id, name, price, stock FROM product " +
-                        "WHERE LOWER(name) LIKE :text ORDER BY id")
-                   .param("text", "%" + text.toLowerCase() + "%")
-                   .query(Product.class).list();
-    }
-
-    public long insert(Product p) {
-        var keys = new GeneratedKeyHolder();
-        jdbc.sql("INSERT INTO product(name, price, stock) VALUES (:name, :price, :stock)")
-            .paramSource(p)
-            .update(keys, "id");
-        return keys.getKey().longValue();
-    }
-
-    public int updateStock(long id, int delta) {
-        return jdbc.sql("UPDATE product SET stock = stock + :delta " +
-                        "WHERE id = :id AND stock + :delta >= 0")
-                   .param("delta", delta)
-                   .param("id", id)
-                   .update();
-    }
-
-    public int delete(long id) {
-        return jdbc.sql("DELETE FROM product WHERE id = :id")
-                .param("id", id)
-                .update();
-    }
+    @Query(value = """
+            select new edu.itc.shop.product.ProductView(p.id, p.sku, p.name, p.price.amount, p.stock)
+            from Product p
+            where p.category = :category
+            """,
+        countQuery = "select count(p) from Product p where p.category = :category")
+    Page<ProductView> findByCategory(@Param("category") Category category, Pageable pageable);
 }

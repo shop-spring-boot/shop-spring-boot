@@ -2,7 +2,7 @@ package edu.itc.shop.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import edu.itc.shop.product.ProductRepository;
+import edu.itc.shop.product.JdbcProductRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,15 +15,15 @@ import org.springframework.test.context.TestConstructor;
 
 @JdbcTest
 @ActiveProfiles("test")
-@Import({OrderRepository.class, ProductRepository.class})
+@Import({JdbcClientOrderRepository.class, JdbcProductRepository.class})
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class RepositoryTest {
 
-    private final OrderRepository orders;
-    private final ProductRepository products;
+    private final JdbcClientOrderRepository orders;
+    private final JdbcProductRepository products;
     private final JdbcClient jdbc;
 
-    RepositoryTest(OrderRepository orders, ProductRepository products, JdbcClient jdbc) {
+    RepositoryTest(JdbcClientOrderRepository orders, JdbcProductRepository products, JdbcClient jdbc) {
         this.orders = orders;
         this.products = products;
         this.jdbc = jdbc;

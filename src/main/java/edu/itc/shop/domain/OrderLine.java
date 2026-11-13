@@ -45,6 +45,7 @@ public class OrderLine {
 
     public Long getId() { return id; }
     public Order getOrder() { return order; }
+    public void setOrder(Order order) { this.order = order; }
     public Product getProduct() { return product; }
     public int getQuantity() { return quantity; }
     public Money getUnitPrice() { return unitPrice; }
