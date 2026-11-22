@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.itc.shop.api.dto.ProductDto;
 import edu.itc.shop.api.dto.StockChange;
+import edu.itc.shop.api.filter.Compress;
 import edu.itc.shop.api.params.ProductFilter;
 import edu.itc.shop.domain.DuplicateSkuException;
 import edu.itc.shop.domain.Product;
@@ -41,6 +42,7 @@ public class ProductResource {
     }
 
     @GET
+    @Compress
     public List<ProductDto> list(@BeanParam @Valid ProductFilter f) {
         return f.apply(repo.findAll()).stream().map(ProductDto::from).toList();
     }
