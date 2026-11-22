@@ -9,4 +9,5 @@ public interface ProductRepository {
     Optional<Product> findBySku(String sku);
     Product save(Product product);   // assigns an id when id == 0, version goes up on every save
     boolean delete(long id);
+    Product adjustStock(long id, int delta);   // null if the product does not exist
 }

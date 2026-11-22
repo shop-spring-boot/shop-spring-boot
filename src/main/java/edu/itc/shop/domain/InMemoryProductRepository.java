@@ -48,4 +48,13 @@ public class InMemoryProductRepository implements ProductRepository {
     public boolean delete(long id) {
         return store.remove(id) != null;
     }
+
+    @Override
+    public Product adjustStock(long id, int delta) {
+        return store.compute(id, (k, p) -> {
+            if (p == null) return null;
+            if (p.stock() + delta < 0) throw new InsufficientStockException(p.sku());
+            return new Product(p.id(), p.name(), p.sku(), p.price(), p.stock() + delta, p.version() + 1);
+        });
+    }
 }
