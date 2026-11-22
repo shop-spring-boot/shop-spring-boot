@@ -7,6 +7,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import edu.itc.shop.domain.InMemoryProductRepository;
 import edu.itc.shop.domain.ProductRepository;
+import edu.itc.shop.domain.ReviewRepository;
 
 public class Main {
     public static final URI BASE = URI.create("http://localhost:8080/api/");
@@ -19,6 +20,7 @@ public class Main {
                     @Override
                     protected void configure() {
                         bind(new InMemoryProductRepository()).to(ProductRepository.class);
+                        bind(new ReviewRepository()).to(ReviewRepository.class);
                     }
                 });
     }

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import edu.itc.shop.domain.Money;
 import edu.itc.shop.domain.Product;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.DefaultValue;
@@ -21,6 +23,8 @@ public class ProductFilter {
     @QueryParam("sort") @DefaultValue("name,asc")
     @Pattern(regexp = "[a-z]+,(asc|desc)", message = "use field,asc or field,desc")
     public String sort;
+    @QueryParam("page") @DefaultValue("0") @Min(0) public int page;
+    @QueryParam("size") @DefaultValue("20") @Min(1) @Max(100) public int size;
 
     // Whitelist: only these fields can be sorted on.
     private static final Map<String, Comparator<Product>> SORTS = Map.of(
