@@ -27,10 +27,9 @@ public class ProblemMapper implements ExceptionMapper<Throwable> {
             if (status < 400) {
                 return w.getResponse();   // redirects and similar are not errors
             }
-            Response.Status known = Response.Status.fromStatusCode(status);
-            String title = known != null ? known.getReasonPhrase() : "Error";
+            String title = reasonPhrase(status);
             var problem = new Problem("about:blank", title, status, w.getMessage(), path, null);
-            return Response.status(status).type(Problem.MEDIA_TYPE).entity(problem).build();
+            return Response.status(statusType(status, title)).type(Problem.MEDIA_TYPE).entity(problem).build();
         }
         if (isMalformedBody(ex)) {
             var problem = new Problem("about:blank", "Bad Request", 400, "Malformed request body", path, null);
@@ -55,5 +54,23 @@ public class ProblemMapper implements ExceptionMapper<Throwable> {
             }
         }
         return false;
+    }
+
+    // Response.Status has no entry for some codes (422); give those a proper reason phrase too,
+    // so the status line reads "422 Unprocessable Content" and the problem title matches it.
+    private static String reasonPhrase(int status) {
+        Response.Status known = Response.Status.fromStatusCode(status);
+        if (known != null) {
+            return known.getReasonPhrase();
+        }
+        return status == 422 ? "Unprocessable Content" : "Error";
+    }
+
+    private static Response.StatusType statusType(int status, String reason) {
+        return new Response.StatusType() {
+            @Override public int getStatusCode() { return status; }
+            @Override public Response.Status.Family getFamily() { return Response.Status.Family.familyOf(status); }
+            @Override public String getReasonPhrase() { return reason; }
+        };
     }
 }

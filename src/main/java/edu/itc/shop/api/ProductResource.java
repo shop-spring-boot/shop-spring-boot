@@ -4,6 +4,11 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import edu.itc.shop.api.dto.ProductDto;
 import edu.itc.shop.api.dto.ProductV2;
 import edu.itc.shop.api.dto.StockChange;
@@ -43,6 +48,7 @@ import jakarta.ws.rs.core.UriInfo;
 @Path("/products")
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Tag(name = "Products", description = "Product catalogue: filtering, paging, caching, versions, reviews")
 public class ProductResource {
 
     private final ProductRepository repo;
@@ -54,6 +60,12 @@ public class ProductResource {
         this.reviews = reviews;
     }
 
+    @Operation(summary = "List products", description = "Filtered, sorted and paged; X-Total-Count and Link headers describe the paging")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "One page of products (gzip if the client accepts it)"),
+        @APIResponse(responseCode = "400", description = "Invalid page, size, sort or price filter (problem+json)"),
+        @APIResponse(responseCode = "406", description = "Not JSON or XML (problem+json)")
+    })
     @GET
     @Compress
     public Response list(@BeanParam @Valid ProductFilter f, @Context UriInfo uriInfo) {
@@ -85,6 +97,13 @@ public class ProductResource {
     }
 
     // Version 1 is the default: plain JSON clients (qs=1.0) and the explicit v1 type get it.
+    @Operation(summary = "Read a product (version 1)", description = "ETag and Cache-Control; 304 when If-None-Match matches")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "The product, with ETag"),
+        @APIResponse(responseCode = "304", description = "Not modified"),
+        @APIResponse(responseCode = "404", description = "Unknown product (problem+json)"),
+        @APIResponse(responseCode = "406", description = "Not an acceptable media type (problem+json)")
+    })
     @GET
     @Path("/{id: \\d+}")
     @Produces({"application/json; qs=1.0", "application/vnd.shop.v1+json", MediaType.APPLICATION_XML})
@@ -103,6 +122,11 @@ public class ProductResource {
     }
 
     // Version 2 is only chosen when the client asks for it; qs=0.5 keeps it behind v1 for "*/*".
+    @Operation(summary = "Read a product (version 2)", description = "Selected with Accept: application/vnd.shop.v2+json")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "The product with a Money price and an available flag"),
+        @APIResponse(responseCode = "404", description = "Unknown product (problem+json)")
+    })
     @GET
     @Path("/{id: \\d+}")
     @Produces("application/vnd.shop.v2+json; qs=0.5")
@@ -110,6 +134,14 @@ public class ProductResource {
         return ProductV2.from(find(id));
     }
 
+    @Operation(summary = "Create a product")
+    @APIResponses({
+        @APIResponse(responseCode = "201", description = "Created; Location points to the new product"),
+        @APIResponse(responseCode = "400", description = "Invalid body (problem+json)"),
+        @APIResponse(responseCode = "401", description = "Missing or invalid X-Api-Key (problem+json)"),
+        @APIResponse(responseCode = "409", description = "SKU already exists (problem+json)"),
+        @APIResponse(responseCode = "415", description = "Body is not JSON or XML (problem+json)")
+    })
     @POST
     public Response create(@Valid @NotNull ProductDto dto, @Context UriInfo uriInfo) {
         repo.findBySku(dto.sku).ifPresent(p -> { throw new DuplicateSkuException(dto.sku); });
@@ -118,6 +150,15 @@ public class ProductResource {
         return Response.created(location).entity(ProductDto.from(saved)).build();
     }
 
+    @Operation(summary = "Replace a product", description = "Needs If-Match with the current ETag")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Replaced; the response carries the new ETag"),
+        @APIResponse(responseCode = "400", description = "Invalid body (problem+json)"),
+        @APIResponse(responseCode = "401", description = "Missing or invalid X-Api-Key (problem+json)"),
+        @APIResponse(responseCode = "404", description = "Unknown product (problem+json)"),
+        @APIResponse(responseCode = "412", description = "If-Match does not match the current version (problem+json)"),
+        @APIResponse(responseCode = "428", description = "If-Match header missing (problem+json)")
+    })
     @PUT
     @Path("/{id: \\d+}")
     public Response replace(@PathParam("id") long id,
@@ -135,6 +176,12 @@ public class ProductResource {
         return Response.ok(ProductDto.from(saved)).tag(tagOf(saved)).build();
     }
 
+    @Operation(summary = "Delete a product")
+    @APIResponses({
+        @APIResponse(responseCode = "204", description = "Deleted"),
+        @APIResponse(responseCode = "401", description = "Missing or invalid X-Api-Key (problem+json)"),
+        @APIResponse(responseCode = "404", description = "Unknown product (problem+json)")
+    })
     @DELETE
     @Path("/{id: \\d+}")
     public void delete(@PathParam("id") long id) {
@@ -143,6 +190,14 @@ public class ProductResource {
         }
     }
 
+    @Operation(summary = "Change the stock by a delta", description = "Body: {\"delta\": -5}")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "The updated product"),
+        @APIResponse(responseCode = "400", description = "Invalid delta (problem+json)"),
+        @APIResponse(responseCode = "401", description = "Missing or invalid X-Api-Key (problem+json)"),
+        @APIResponse(responseCode = "404", description = "Unknown product (problem+json)"),
+        @APIResponse(responseCode = "409", description = "The stock would go negative (problem+json)")
+    })
     @PATCH
     @Path("/{id: \\d+}/stock")
     @Consumes(MediaType.APPLICATION_JSON)
