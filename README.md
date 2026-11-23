@@ -131,3 +131,20 @@ If the project uses the Maven Wrapper, you can run:
 **Course:** Lab 4 - RESTful Web Services
 
 **Task:** Task 2 - Full CRUD with Status Codes, Headers, JSON and XML
+## Testing Results
+
+All the following API tests were completed successfully:
+
+| Test | Expected Status | Result |
+|---|---|---|
+| GET all products (JSON) | 200 OK | Passed |
+| POST product (JSON) | 201 Created | Passed |
+| POST duplicate SKU | 409 Conflict | Passed |
+| PUT update product | 200 OK | Passed |
+| PATCH change stock | 200 OK | Passed |
+| DELETE product | 204 No Content | Passed |
+| GET deleted product | 404 Not Found | Passed |
+| GET all products (XML) | 200 OK | Passed |
+| POST product (XML) | 201 Created | Passed |
+| GET product by ID (XML) | 200 OK | Passed |
+
