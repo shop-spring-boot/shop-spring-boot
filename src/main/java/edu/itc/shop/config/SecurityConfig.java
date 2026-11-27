@@ -8,6 +8,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+
+import edu.itc.shop.security.RequestIdFilter;
 
 /**
  * Task 1: our first SecurityFilterChain.
@@ -23,10 +27,12 @@ public class SecurityConfig {
                                             JwtAuthenticationConverter jwtAuthenticationConverter,
                                             ProblemAuthenticationEntryPoint entryPoint) throws Exception {
         http
+            
             // Public endpoints: no login needed. Everything else: must be authenticated.
             .authorizeHttpRequests(auth -> auth
                 // TASK 4: login endpoint is public (it is how you get a token)
                 .requestMatchers("/api/auth/**", "/api/public/**", "/api/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/products/*/reviews.html", "/api/products/*/reviews").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/*/ship").hasRole("ADMIN")
                 .anyRequest().authenticated())
 
@@ -46,7 +52,19 @@ public class SecurityConfig {
 
             // CSRF disabled: Bearer only. The token is sent in the Authorization header,
             // never in a cookie, so a browser cannot attach it automatically (no CSRF risk).
-            .csrf(AbstractHttpConfigurer::disable);
+            .csrf(AbstractHttpConfigurer::disable)
+
+            .headers(h -> h
+            .frameOptions(f -> f.deny())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .maxAgeInSeconds(31_536_000)
+                .requestMatcher(request -> true))   // dev only: lets HSTS show over http://localhost
+            .contentSecurityPolicy(csp -> csp.policyDirectives(
+                "default-src 'self'; frame-ancestors 'none'; object-src 'none'"))
+            .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
+            
+            .addFilterBefore(new RequestIdFilter(), AuthorizationFilter.class);
 
         return http.build();
     }

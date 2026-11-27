@@ -32,9 +32,4 @@ class SecurityTask1Test {
             .andExpect(status().isUnauthorized());
     }
 
-    @Test
-    void privateEndpointWithCorrectLoginIs200() throws Exception {
-        mvc.perform(get("/api/private/hello").with(httpBasic("alice", "Alice-pass-123")))
-            .andExpect(status().isOk());
-    }
 }

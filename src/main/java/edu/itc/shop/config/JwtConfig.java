@@ -5,9 +5,11 @@ import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,6 +24,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+
 
 @Configuration
 public class JwtConfig {
@@ -55,9 +58,12 @@ public class JwtConfig {
     }
 
     @Bean
-    AuthenticationManager authenticationManager(UserDetailsService uds, PasswordEncoder encoder) {
+    AuthenticationManager authenticationManager(UserDetailsService uds, PasswordEncoder encoder,
+                                                ApplicationEventPublisher publisher) {
         var provider = new DaoAuthenticationProvider(uds);
         provider.setPasswordEncoder(encoder);
-        return new ProviderManager(provider);
+        var manager = new ProviderManager(provider);
+        manager.setAuthenticationEventPublisher(new DefaultAuthenticationEventPublisher(publisher));
+        return manager;
     }
 }
