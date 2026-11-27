@@ -1,5 +1,8 @@
+
 package edu.itc.shop.domain;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +23,9 @@ import jakarta.persistence.Table;
 @Table(name = "users")
 public class UserAccount {
 
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final long LOCK_MINUTES = 15;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,6 +38,12 @@ public class UserAccount {
 
     @Column(nullable = false)
     private boolean enabled = true;
+
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts = 0;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
@@ -48,16 +60,66 @@ public class UserAccount {
         this.enabled = true;
     }
 
-    public Long getId() { return id; }
-    public String getUsername() { return username; }
-    public String getPasswordHash() { return passwordHash; }
-    public boolean isEnabled() { return enabled; }
-    public Set<Role> getRoles() { return roles; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public Instant getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public boolean isAccountNonLocked() {
+        return lockedUntil == null || !lockedUntil.isAfter(Instant.now());
+    }
+
+    public void recordFailedLogin() {
+        if (!isAccountNonLocked()) {
+            return;
+        }
+
+        failedAttempts++;
+
+        if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+            lockedUntil = Instant.now().plus(LOCK_MINUTES, ChronoUnit.MINUTES);
+        }
+    }
+
+    public void resetFailedLogins() {
+        failedAttempts = 0;
+        lockedUntil = null;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     @Override
     public String toString() {
-        return "UserAccount{id=" + id + ", username='" + username + "', enabled=" + enabled + ", roles=" + roles + "}";
+        return "UserAccount{id=" + id
+                + ", username='" + username
+                + "', enabled=" + enabled
+                + ", failedAttempts=" + failedAttempts
+                + ", lockedUntil=" + lockedUntil
+                + ", roles=" + roles + "}";
     }
 }

@@ -1,3 +1,4 @@
+
 package edu.itc.shop.security;
 
 import org.springframework.security.core.userdetails.User;
@@ -20,9 +21,12 @@ public class JpaUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
+
         UserAccount account = users.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found"));
 
         String[] roles = account.getRoles().stream()
                 .map(Role::name)
@@ -32,6 +36,7 @@ public class JpaUserDetailsService implements UserDetailsService {
                 .password(account.getPasswordHash())
                 .roles(roles)
                 .disabled(!account.isEnabled())
+                .accountLocked(!account.isAccountNonLocked())
                 .build();
     }
 }
