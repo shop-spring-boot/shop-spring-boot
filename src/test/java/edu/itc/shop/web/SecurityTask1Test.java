@@ -1,0 +1,41 @@
+package edu.itc.shop.web;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class SecurityTask1Test {
+
+    @Autowired
+    MockMvc mvc;
+
+    @Test
+    void publicEndpointNeedsNoLogin() throws Exception {
+        mvc.perform(get("/api/public/hello")).andExpect(status().isOk());
+    }
+
+    @Test
+    void privateEndpointWithoutLoginIs401() throws Exception {
+        mvc.perform(get("/api/private/hello")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void privateEndpointWithWrongPasswordIs401() throws Exception {
+        mvc.perform(get("/api/private/hello").with(httpBasic("user", "wrong")))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void privateEndpointWithCorrectLoginIs200() throws Exception {
+        mvc.perform(get("/api/private/hello").with(httpBasic("user", "password")))
+            .andExpect(status().isOk());
+    }
+}
