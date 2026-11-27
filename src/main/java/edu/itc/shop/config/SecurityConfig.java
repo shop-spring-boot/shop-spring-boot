@@ -2,6 +2,7 @@ package edu.itc.shop.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,11 +21,13 @@ public class SecurityConfig {
             // Public endpoints: no login needed. Everything else: must be authenticated.
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/public/**", "/api/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/orders/*/ship").hasRole("ADMIN")
                 .anyRequest().authenticated())
             // HTTP Basic: the client sends "Authorization: Basic base64(user:password)".
             .httpBasic(Customizer.withDefaults())
             // CSRF disabled: this chain accepts no cookie-based credentials (Basic / Bearer only)
             .csrf(AbstractHttpConfigurer::disable);
+
         return http.build();
     }
 }
