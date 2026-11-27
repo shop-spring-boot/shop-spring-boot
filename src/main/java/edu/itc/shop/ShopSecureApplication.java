@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 
 import edu.itc.shop.domain.Role;
@@ -13,6 +14,7 @@ import edu.itc.shop.repository.UserAccountRepository;
 import edu.itc.shop.service.AccountService;
 
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class ShopSecureApplication {
 
     public static void main(String[] args) {

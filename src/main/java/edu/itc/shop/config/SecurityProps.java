@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+
 @Validated
 @ConfigurationProperties("shop.security")
 public record SecurityProps(@NotBlank @Size(min = 32) String jwtSecret,

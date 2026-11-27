@@ -11,5 +11,4 @@ public record RegisterRequest(
         @NotBlank @Size(min = 12, max = 72)
         @Pattern(regexp = "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*",
                  message = "must contain an upper-case letter, a lower-case letter and a digit")
-        String password
-) {}
+        String password) {}

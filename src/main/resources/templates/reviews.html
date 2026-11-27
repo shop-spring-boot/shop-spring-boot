@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Reviews</title></head>
+<body>
+<h1>Reviews for product <span th:text="${productId}"></span></h1>
+<div th:each="r : ${reviews}">
+  <b th:text="${r.author}"></b> (<span th:text="${r.stars}"></span>/5)
+  <p th:text="${r.text}"></p>
+</div>
+</body>
+</html>
